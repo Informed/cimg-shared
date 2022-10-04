@@ -1,6 +1,6 @@
 # vim:set ft=dockerfile:
 
-FROM %%NAMESPACE%%/%%PARENT%%:%%PARENT_TAG%%-node
+FROM --platform=%%PLATFORM%% %%NAMESPACE%%/%%PARENT%%:%%PARENT_TAG%%-node
 
 LABEL maintainer="CircleCI Community & Partner Engineering Team <community-partner@circleci.com>"
 
