@@ -8,13 +8,13 @@ tagless_image=${namespace}/${repository}
 
 # Prepare the build and push files. Originally we only needed a build file but
 # with modern versions of Docker, a push file became neccesary as well.
-echo "#!/usr/bin/env bash" >./build-images.sh
-echo "# Do not edit by hand; please use build scripts/templates to make changes" >>./build-images.sh
+echo "#!/usr/bin/env bash" > ./build-images.sh
+echo "# Do not edit by hand; please use build scripts/templates to make changes" >> ./build-images.sh
 chmod +x ./build-images.sh
-echo "" >>./build-images.sh
+echo "" >> ./build-images.sh
 
-echo "#!/usr/bin/env bash" >./push-images.sh
-echo "# Do not edit by hand; please use build scripts/templates to make changes" >>./push-images.sh
+echo "#!/usr/bin/env bash" > ./push-images.sh
+echo "# Do not edit by hand; please use build scripts/templates to make changes" >> ./push-images.sh
 chmod +x ./push-images.sh
 
 export CREATE_VERSIONS=("$@")
@@ -44,13 +44,13 @@ export CREATE_VERSIONS=("$@")
 # %%PARAM1%% - what's passed as the paramater when passing version strings to the build script (see above)
 # %%MAIN_SHA%% - deprecated, please use %%PARAM1%%
 # %%PLATFORM%% - the platform of the image such as `amd64` or `arm64`
-#
+
 #####
 # Helper functions.
 #####
 
 # Parses all template variables, regardless of if it's a main or variant image
-parse_template_variables() {
+parse_template_variables () {
 
 	local variantPath=${1}
 	local parent=${2}
@@ -60,7 +60,7 @@ parse_template_variables() {
 
 	[[ -d "$directory" ]] || mkdir "$directory"
 
-	sed -e 's!%%PARENT%%!'"${parent}"'!g' "${fileTemplate}" >"./${versionShort}/${variantPath}Dockerfile"
+	sed -e 's!%%PARENT%%!'"${parent}"'!g' "${fileTemplate}" > "./${versionShort}/${variantPath}Dockerfile"
 	sed -i.bak 's/%%PARENT_TAG%%/'"${parentTag}"'/g' "./${versionShort}/${variantPath}Dockerfile"
 	sed -i.bak 's/%%NAMESPACE%%/'"${namespace}"'/g' "./${versionShort}/${variantPath}Dockerfile"
 	sed -i.bak 's/%%MAIN_VERSION%%/'"${vgVersion}"'/g' "./${versionShort}/${variantPath}Dockerfile" # will be deprecated in the future
@@ -84,9 +84,9 @@ build_and_push() {
 	# if parentTags are enabled, then additional tags will be generated in the parentTag loop
 	# the defaultString is referenced as the tag that should be given by default for either a parent Tag or an alias
 
-	echo "docker push $tagless_image:$versionShortString" >>./push-images-temp.sh
-	echo "docker push $tagless_image:$versionString" >>./push-images-temp.sh
-	echo "docker build --file $pathing/Dockerfile -t $tagless_image:$versionString -t $tagless_image:$versionShortString ." >>./build-images-temp.sh
+	echo "docker push $tagless_image:$versionShortString" >> ./push-images-temp.sh
+	echo "docker push $tagless_image:$versionString" >> ./push-images-temp.sh
+	echo "docker build --file $pathing/Dockerfile -t $tagless_image:$versionString -t $tagless_image:$versionShortString ." >> ./build-images-temp.sh
 
 	if [[ -n $defaultParentTag ]] && [[ "$defaultParentTag" == "$parentTag" ]]; then
 		{
@@ -94,18 +94,18 @@ build_and_push() {
 			echo "docker tag $tagless_image:$versionShortString $tagless_image:$defaultShortString"
 			echo "docker push $tagless_image:$defaultShortString"
 			echo "docker push $tagless_image:$defaultString"
-		} >>./push-images-temp.sh
+		} >> ./push-images-temp.sh
 	fi
 
 	if [[ -n $vgAlias1 ]] && [[ "$vgVersion" = "$aliasGroup" ]]; then
 		{
 			echo "docker tag $tagless_image:$versionString $tagless_image:$defaultString"
 			echo "docker push $tagless_image:$defaultString"
-		} >>./push-images-temp.sh
+		} >> ./push-images-temp.sh
 	fi
 }
 
-filepath_templating() {
+filepath_templating () {
 	if [[ -f "./variants/${variant}.Dockerfile.template" ]]; then
 		fileTemplate="./variants/${variant}.Dockerfile.template"
 	elif [[ -f "./shared/variants/${variant}.Dockerfile.template" ]]; then
@@ -123,24 +123,24 @@ for versionGroup in "$@"; do
 
 	# Process the version group(s) that were passed to this script.
 	if [[ "$versionGroup" == *"#"* ]]; then
-		vgParam1=$(cut -d "#" -f2- <<<"$versionGroup")
-		versionGroup="${versionGroup//$vgParam1/}"
-		versionGroup="${versionGroup//\#/}"
+		vgParam1=$(cut -d "#" -f2- <<< "$versionGroup")
+		versionGroup="${versionGroup//$vgParam1}"
+		versionGroup="${versionGroup//\#}"
 	fi
 
 	if [[ "$versionGroup" == *"="* ]]; then
-		vgAlias1=$(cut -d "=" -f2- <<<"$versionGroup")
-		versionGroup="${versionGroup//$vgAlias1/}"
-		versionGroup="${versionGroup//=/}"
+		vgAlias1=$(cut -d "=" -f2- <<< "$versionGroup")
+		versionGroup="${versionGroup//$vgAlias1}"
+		versionGroup="${versionGroup//=}"
 		aliasGroup="${versionGroup}"
 	fi
 
-	vgVersionFull=$(cut -d "v" -f2- <<<"$versionGroup")
-	vgVersion=$vgVersionFull # will be deprecated in the future
+	vgVersionFull=$(cut -d "v" -f2- <<< "$versionGroup")
+	vgVersion=$vgVersionFull  # will be deprecated in the future
 
 	if [[ $vgVersionFull =~ ^[0-9]+\.[0-9]+ ]]; then
 		vgVersionMinor=${BASH_REMATCH[0]}
-		versionShort=$vgVersionMinor # will be deprecated in the future
+		versionShort=$vgVersionMinor  # will be deprecated in the future
 	else
 		echo "Version matching (minor) failed." >&2
 		exit 1
@@ -167,7 +167,7 @@ for versionGroup in "$@"; do
 		done
 	else
 
-		# parentTag loop; one Dockerfile will be created along with however many variants there are for each parentTag
+	# parentTag loop; one Dockerfile will be created along with however many variants there are for each parentTag
 		for parentTag in "${parentTags[@]}"; do
 			if [[ -n $parentTag ]]; then
 				parse_template_variables "$parentTag/" "$parent" "./Dockerfile.template" "$parentTag" "$versionShort/$parentTag"
@@ -186,10 +186,10 @@ for versionGroup in "$@"; do
 	if [[ -n $vgAlias1 ]] && [[ $aliasGroup = "$versionGroup" ]]; then
 		if [[ -f ALIASES ]]; then
 			# Make sure the current alias isn't in the file.
-			grep -v "${vgAlias1}" ./ALIASES >./TEMP && mv ./TEMP ./ALIASES
+			grep -v "${vgAlias1}" ./ALIASES > ./TEMP && mv ./TEMP ./ALIASES
 		fi
 
-		echo "${vgAlias1}=${vgVersion}" >>ALIASES
+		echo "${vgAlias1}=${vgVersion}" >> ALIASES
 	fi
 
 	# This .bak thing fixes a Linux/macOS compatibility issue, but the files are cleaned up
@@ -197,17 +197,17 @@ for versionGroup in "$@"; do
 done
 
 if [[ -n "${CREATE_VERSIONS}" ]]; then
-	# Make sure the current alias isn't in the file.
+		# Make sure the current alias isn't in the file.
 	if [[ -f GEN-CHECK ]]; then
-		grep -v "${CREATE_VERSIONS}" ./GEN-CHECK >./TEMP2 && mv ./TEMP2 ./GEN-CHECK
+		grep -v "${CREATE_VERSIONS}" ./GEN-CHECK > ./TEMP2 && mv ./TEMP2 ./GEN-CHECK
 	fi
 
-	echo "GEN_CHECK=($@)" >GEN-CHECK
+	echo "GEN_CHECK=($@)" > GEN-CHECK
 	if [[ -f TEMP2 ]]; then
 		rm ./TEMP2
 	fi
 fi
 
-cat -n push-images-temp.sh | sort -uk2 | sort -nk1 | cut -f2- >>push-images.sh
-cat -n build-images-temp.sh | sort -uk2 | sort -nk1 | cut -f2- >>build-images.sh
+cat -n push-images-temp.sh | sort -uk2 | sort -nk1 | cut -f2- >> push-images.sh
+cat -n build-images-temp.sh | sort -uk2 | sort -nk1 | cut -f2- >> build-images.sh
 rm push-images-temp.sh build-images-temp.sh
