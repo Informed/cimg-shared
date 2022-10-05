@@ -2,6 +2,8 @@
 
 This repository contains shared resources used by CircleCI's new deterministic convenience images pilot project.
 
+The `informed` branch is customized for use at Informed
+
 ## Overview
 
 See [the `circleci-cimg` topic tag](https://github.com/search?q=topic%3Acircleci-cimg) for all repositories associated with new convenience images work.
