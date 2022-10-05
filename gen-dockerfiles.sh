@@ -9,7 +9,7 @@
 if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
 	echo "Usage: $0 version [REGISTRY]"
 	echo "  version: The Python version to use. Required"
-	echo "  REGISTRY: The registry to use. Defaults to Docker Hub. Optional"
+	echo "  REGISTRY: The registry namespace to use. Defaults to namespace from manifest. Optional"
 	exit 0
 fi
 
@@ -19,17 +19,15 @@ if [ -z "$1" ]; then
 fi
 
 if [ -z "${2}" ]; then
-	registry="docker.io"
+	registry=${namespace}
 else
 	registry="$2"
 	set -- "${@:1:$#-1}"
 fi
 
-echo "args: $@"
-
 source ./manifest
-target_repo="${registry}/${namespace}/${repository}"
-tagless_image=${namespace}/${repository}
+tagless_image=${registry}/${repository}
+echo "args: $@ tagless_image: $tagless_image"
 
 # Prepare the build and push files. Originally we only needed a build file but
 # with modern versions of Docker, a push file became neccesary as well.
@@ -109,23 +107,23 @@ build_and_push() {
 	# if parentTags are enabled, then additional tags will be generated in the parentTag loop
 	# the defaultString is referenced as the tag that should be given by default for either a parent Tag or an alias
 
-	echo "docker push $target_repo:$versionShortString" >>./push-images-temp.sh
-	echo "docker push $target_repo:$versionString" >>./push-images-temp.sh
+	echo "docker push $tagless_image:$versionShortString" >>./push-images-temp.sh
+	echo "docker push $tagless_image:$versionString" >>./push-images-temp.sh
 	echo "docker build --file $pathing/Dockerfile -t $tagless_image:$versionString -t $tagless_image:$versionShortString ." >>./build-images-temp.sh
 
 	if [[ -n $defaultParentTag ]] && [[ "$defaultParentTag" == "$parentTag" ]]; then
 		{
-			echo "docker tag $target_repo:$versionString $target_repo:$defaultString"
-			echo "docker tag $target_repo:$versionShortString $target_repo:$defaultShortString"
-			echo "docker push $target_repo:$defaultShortString"
-			echo "docker push $target_repo:$defaultString"
+			echo "docker tag $tagless_image:$versionString $tagless_image:$defaultString"
+			echo "docker tag $tagless_image:$versionShortString $tagless_image:$defaultShortString"
+			echo "docker push $tagless_image:$defaultShortString"
+			echo "docker push $tagless_image:$defaultString"
 		} >>./push-images-temp.sh
 	fi
 
 	if [[ -n $vgAlias1 ]] && [[ "$vgVersion" = "$aliasGroup" ]]; then
 		{
-			echo "docker tag $target_repo:$versionString $target_repo:$defaultString"
-			echo "docker push $target_repo:$defaultString"
+			echo "docker tag $tagless_image:$versionString $tagless_image:$defaultString"
+			echo "docker push $tagless_image:$defaultString"
 		} >>./push-images-temp.sh
 	fi
 }
