@@ -7,7 +7,8 @@
 # You can specify the registry as an argument to this script, but it will default to Docker Hub.
 #
 if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
-	echo "Usage: $0 version [REGISTRY]"
+	echo "Usage: $0 [-a | --variants] version [REGISTRY]"
+	echo "  -a or --variants: Build all variants of the image if this flag is supplied (Default no variants)"
 	echo "  version: The Python version to use. Required"
 	echo "  REGISTRY: The registry namespace to use. Defaults to namespace from manifest. Optional"
 	exit 0
@@ -18,14 +19,28 @@ if [ -z "$1" ]; then
 	exit 1
 fi
 
+# Default to no variants
+if [ "$1" == "-a" ] || [ "$1" == "--variants" ]; then
+	no_variants=0
+	shift
+else
+	no_variants=1
+fi
+
 if [ -z "${2}" ]; then
 	registry=${namespace}
 else
 	registry="$2"
+	# Pop the last arg off the array of arguments
 	set -- "${@:1:$#-1}"
 fi
 
 source ./manifest
+
+if [ "$no_variants" == 1 ]; then
+	variants=()
+fi
+
 tagless_image=${registry}/${repository}
 echo "args: $@ tagless_image: $tagless_image"
 
